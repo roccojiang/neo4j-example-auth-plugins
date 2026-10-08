@@ -52,6 +52,13 @@
       <version>${neo4j.version}</version>
       <scope>provided</scope>
     </dependency>
+    <!-- Bundled into the `deploy`-classified jar by maven-shade-plugin below -->
+    <dependency>
+      <groupId>com.google.code.gson</groupId>
+      <artifactId>gson</artifactId>
+      <version>2.14.0</version>
+      <scope>compile</scope>
+    </dependency>
 
     <!-- Test dependencies -->
     <dependency>
@@ -198,6 +205,38 @@
             </manifestEntries>
           </archive>
         </configuration>
+      </plugin>
+      <plugin>
+        <!-- This generates a second jar-file with the plugin code plus the
+             dependencies marked as `compile` scope (the Gson parser used by
+             the entitlements plugin). That `deploy`-classified jar is what
+             should be copied into the `plugins` directory of a Neo4j
+             deployment; the thin jar stays the default artifact. -->
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>3.6.0</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <shadedArtifactAttached>true</shadedArtifactAttached>
+              <shadedClassifierName>deploy</shadedClassifierName>
+              <filters>
+                <filter>
+                  <artifact>*:*</artifact>
+                  <excludes>
+                    <exclude>META-INF/*.SF</exclude>
+                    <exclude>META-INF/*.DSA</exclude>
+                    <exclude>META-INF/*.RSA</exclude>
+                  </excludes>
+                </filter>
+              </filters>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
